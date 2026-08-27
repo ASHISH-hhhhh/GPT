@@ -1,11 +1,11 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import connectDB from "./config/databaseConnect.js";
+import connectRedis from "./config/redisConnect.js";
 import userRouter from "./routes/userRoute.js";
 import chatRouter from "./routes/chatRoute.js";
 import messageRouter from "./routes/messageRoute.js";
 import cookieParser from "cookie-parser";
-dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -17,8 +17,9 @@ app.use("/message", messageRouter);
 
 const connectDbPort = async () => {
   try {
-    const res = await connectDB();
-    if (res) {
+    const resMongo = await connectDB();
+    const resRedis = await connectRedis();
+    if (resMongo && resRedis) {
       app.listen(process.env.PORT, () => {
         console.log(`Listening on port number ${process.env.PORT}`);
       });
@@ -29,4 +30,4 @@ const connectDbPort = async () => {
     console.log(error.message);
   }
 };
-connectDbPort();
+await connectDbPort();

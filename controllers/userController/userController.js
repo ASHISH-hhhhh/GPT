@@ -7,6 +7,9 @@ import {
   userSignUpValidator,
   userLogInValidator,
 } from "../../validators/userValidator.js";
+import blockJWTToken from "../../services/blockJWTToken.js";
+import { redisClient } from "../../config/redisConnect.js";
+
 export const signup = async (req, res) => {
   try {
     const result = userSignUpValidator.safeParse(req.body);
@@ -80,18 +83,22 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const verifiedToken = jwt.verify(req.cookies.token, process.env.SECRET_KEY);
+
     if (!verifiedToken) {
       return res
         .status(422)
         .json({ message: "Not  a valid jwt token to logout" });
     }
+
+    blockJWTToken(req.cookies.token, verifiedToken);
+
     res.clearCookie("token", {
       httpOnly: true,
       secure: false,
     });
     res.status(201).json({ message: "User logged out successfully" });
   } catch (error) {
-    console.log(error.message);
+    console.log("In logout controller catch", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -125,6 +132,12 @@ export const privateProfile = async (req, res) => {
 };
 export const deleteProfile = async (req, res) => {
   try {
+    const isBlocked = await redisClient.exists(
+      `blockedJWT${req.cookies.token}`,
+    );
+    if (isBlocked) {
+      return res.status(401).json({ message: "Token is invalid" });
+    }
     const { id } = req.payload;
     const isUser = await UserModel.findOne({ _id: id });
     if (isUser === null) {
