@@ -114,7 +114,23 @@ export const messageInContext = async (req, res) => {
         role: "user",
         parts: [
           {
-            text: "Please create a summary for all the above chats . Iam creating this summary for you only so you get proper context .Otherwise i have to send every message which increases token consumption right. So just give me the summary in response i will store it directly in my DB okay include in summary that responses should be short and crisp to the point",
+            text: `Summarize the conversation above into persistent context for future conversations.
+
+                   OUTPUT RULES:
+                   1. Output ONLY the summary.
+                   2. No introduction.
+                   3. No conclusion.
+                   4. No "Summary:", "Summary Response:", "Status:", or similar headings unless they contain actual contextual information.
+                   5. No conversational language.
+                   6. No explanation of the summarization process.
+                   7. No mention of this prompt.
+                   8. Do not address the user.
+                   9. Keep it concise and information-dense.
+                  10. Include only information that could be useful in future conversations.
+                  11. Preserve important user preferences, instructions, projects, decisions, and technical context.
+                  12. Remember: future responses should be short, crisp, and to the point.
+
+                  Use concise bullet points or sections.`,
           },
         ],
       });

@@ -28,7 +28,7 @@ export const logInLimiter = async (req, res, next) => {
     if (keyCount === 1) {
       await redisClient.expire(key, 60 * 10);
     }
-    if (keyCount > 5) {
+    if (keyCount > 10) {
       const ttl = await redisClient.ttl(key);
       return res.status(429).json({
         message: `Too many request . Please try after ${new Date(Date.now() + ttl * 1000).toLocaleString("en-IN")}`,
