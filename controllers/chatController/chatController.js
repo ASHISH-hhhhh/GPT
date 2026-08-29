@@ -62,7 +62,7 @@ export const createChat = async (req, res) => {
       // const comebackTiming = new Date(
       //   findUser.usage.resetAt.getTime() + 5 * 60 * 60 * 1000,
       // );
-      return res.status(422).josn({
+      return res.status(422).json({
         message: `You have used your Five hour window token limit . Please come back at ${findUser.usage.resetAt.toLocaleString("en-IN")}`,
       });
     }
