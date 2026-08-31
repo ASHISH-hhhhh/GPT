@@ -12,8 +12,8 @@ const authenticateUser = async (req, res, next) => {
         .json({ message: "Invalid token please login again" });
     }
     const payload = jwt.verify(req.cookies.token, process.env.SECRET_KEY);
-    console.log("Here:", payload);
-    console.log("JWT TOKEN:", req.cookies.token);
+    // console.log("Here:", payload);
+    // console.log("JWT TOKEN:", req.cookies.token);
     if (!payload) {
       return res.status(401).json({ message: "In valid token credentials" });
     }

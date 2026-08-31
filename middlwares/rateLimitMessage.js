@@ -1,17 +1,15 @@
-import { redisClient } from "../config/redisConnect.js";
+import rateLimit from "../services/rateLimit.js";
 
 export const rateLimitGetMessages = async (req, res, next) => {
   try {
     const key = `rateLimitGetMessages${req.payload.id}`;
-    const count = await redisClient.incr(key);
-    if (count === 1) {
-      await redisClient.expire(key, 60);
-    }
-    if (count > 100) {
-      const ttl = await redisClient.ttl(key);
-      return res.status(429).json({
-        message: `Too many request only 100 request allowed per minute | please try try again after ${new Date(Date.now() + ttl * 1000).toLocaleString("en-IN")}`,
-      });
+    const expiryTime = 60;
+    const limit = 100;
+    const rateLimitFunc = await rateLimit(key, expiryTime, limit);
+    if (rateLimitFunc.status === 0) {
+      return res
+        .status(429)
+        .json({ message: `Too many request ${rateLimitFunc.tryAfter}` });
     }
     next();
   } catch (error) {
@@ -23,16 +21,13 @@ export const rateLimitGetMessages = async (req, res, next) => {
 export const rateLimitMIC = async (req, res, next) => {
   try {
     const key = `rateLimitMIC${req.payload.id}`;
-    const count = await redisClient.incr(key);
-    console.log("Count for MIC", count);
-    if (count === 1) {
-      await redisClient.expire(key, 60 * 60);
-    }
-    if (count > 20) {
-      const ttl = await redisClient.ttl(key);
-      return res.status(429).json({
-        message: `Too many request | Please try again after ${new Date(Date.now() + ttl * 1000).toLocaleString("en-IN")}`,
-      });
+    const expiryTime = 60 * 60;
+    const limit = 20;
+    const rateLimitFunc = await rateLimit(key, expiryTime, limit);
+    if (rateLimitFunc.status === 0) {
+      return res
+        .status(429)
+        .json({ message: `Too many request ${rateLimitFunc.tryAfter}` });
     }
     next();
   } catch (error) {

@@ -1,18 +1,15 @@
-import { redisClient } from "../config/redisConnect.js";
+import rateLimit from "../services/rateLimit.js";
 
 export const rateLimitGetRC = async (req, res, next) => {
   try {
     const key = `rateLimitGetRC${req.payload.id}`;
-    const count = await redisClient.incr(key);
-    if (count === 1) {
-      await redisClient.expire(key, 60);
-    }
-    if (count > 100) {
-      const ttl = await redisClient.ttl(key);
+    const expiryTime = 60;
+    const limit = 100;
+    const rateLimitFunc = await rateLimit(key, expiryTime, limit);
+
+    if (rateLimitFunc.status === 0) {
       return res.status(429).json({
-        message: `Too many request please try after ${new Date(
-          Date.now() + ttl * 1000,
-        ).toLocaleString("en-IN")}`,
+        message: `Too many request | Please try after ${rateLimitFunc.tryAfter}`,
       });
     }
     next();
@@ -24,16 +21,13 @@ export const rateLimitGetRC = async (req, res, next) => {
 export const rateLimitGetSC = async (req, res, next) => {
   try {
     const key = `rateLimitGetSC${req.payload.id}`;
-    const count = await redisClient.incr(key);
-    if (count === 1) {
-      await redisClient.expire(key, 60);
-    }
-    if (count > 100) {
-      const ttl = await redisClient.ttl(key);
+    const expiryTime = 60;
+    const limit = 100;
+    const rateLimitFunc = await rateLimit(key, expiryTime, limit);
+
+    if (rateLimitFunc.status === 0) {
       return res.status(429).json({
-        message: `Too many request please try after ${new Date(
-          Date.now() + ttl * 1000,
-        ).toLocaleString("en-IN")}`,
+        message: `Too many request | Please try after ${rateLimitFunc.tryAfter}`,
       });
     }
     next();
@@ -45,17 +39,13 @@ export const rateLimitGetSC = async (req, res, next) => {
 export const rateLimitCreateChat = async (req, res, next) => {
   try {
     const key = `rateLimitCreateChat${req.payload.id}`;
-    const count = await redisClient.incr(key);
-    console.log("Count creating chat for id :", req.payload.id, count);
-    if (count === 1) {
-      await redisClient.expire(key, 60 * 60);
-    }
-    if (count > 20) {
-      const ttl = await redisClient.ttl(key);
+    const expiryTime = 60 * 60;
+    const limit = 20;
+    const rateLimitFunc = await rateLimit(key, expiryTime, limit);
+
+    if (rateLimitFunc.status === 0) {
       return res.status(429).json({
-        message: `Too many request please try after. Only 20 chats are allowed to create per hour ${new Date(
-          Date.now() + ttl * 1000,
-        ).toLocaleString("en-IN")}`,
+        message: `Too many request | Please again after ${rateLimitFunc.tryAfter}`,
       });
     }
     next();
