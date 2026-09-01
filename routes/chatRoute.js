@@ -11,14 +11,19 @@ import {
   rateLimitGetSC,
   rateLimitCreateChat,
 } from "../middlwares/rateLimitChat.js";
-
+import { rateLimitCreateChatTokens } from "../middlwares/rateLimitLLMTokens.js";
 const chatRouter = express.Router();
 
 chatRouter.use(authenticateUser);
 
 chatRouter.get("/getrecentchats", rateLimitGetRC, getRecentChats);
 chatRouter.get("/getsinglechat/:chatid", rateLimitGetSC, getSingleChat);
-chatRouter.post("/createchat", rateLimitCreateChat, createChat);
+chatRouter.post(
+  "/createchat",
+  rateLimitCreateChat,
+  rateLimitCreateChatTokens,
+  createChat,
+);
 chatRouter.delete("/deletesinglechat/:chatid", deleteSingleChat);
 
 export default chatRouter;

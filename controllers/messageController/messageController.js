@@ -2,6 +2,7 @@ import UserModel from "../../model/userSchema.js";
 import ChatModel from "../../model/chatSchema.js";
 import MessageModel from "../../model/messageSchema.js";
 import geminiResponse from "../../services/geminiResponse.js";
+import incrTokensConsumed from "../../services/incrTokensConsumed.js";
 
 export const messageInContext = async (req, res) => {
   try {
@@ -16,17 +17,6 @@ export const messageInContext = async (req, res) => {
     const isUser = await UserModel.findOne({ _id: id });
     if (!isUser) {
       return res.status(404).json({ message: "User not found" });
-    }
-
-    if (Date.now() > isUser.usage.resetAt) {
-      isUser.usage.tokenFiveHourUsed = 0;
-      isUser.usage.resetAt = new Date(Date.now() + 5 * 60 * 60 * 1000);
-      await isUser.save();
-    }
-    if (isUser.usage.tokenFiveHourUsed >= isUser.usage.tokenFiveHourLimit) {
-      return res.status(422).json({
-        message: `You have used your Five hour window token limit . Please come back at ${isUser.usage.resetAt.toLocaleString("en-IN")}`,
-      });
     }
 
     const chat = await ChatModel.findOne({ userId: id, _id: chatId });
@@ -185,11 +175,16 @@ export const messageInContext = async (req, res) => {
         new: true,
       },
     );
+    const redisFiveHourTokenKey = `userId${req.payload.id}5hour`;
+    await incrTokensConsumed(
+      redisFiveHourTokenKey,
+      llmResponse.totalPromptResponseTokenCount,
+    );
     const updatedUserProfile = await UserModel.findOneAndUpdate(
       { _id: id },
       {
         $inc: {
-          "usage.tokenFiveHourUsed": llmResponse.totalPromptResponseTokenCount,
+          // "usage.tokenFiveHourUsed": llmResponse.totalPromptResponseTokenCount,
           "usage.totalTokensUsedOverAll":
             llmResponse.totalPromptResponseTokenCount,
         },

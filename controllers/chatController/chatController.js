@@ -2,6 +2,7 @@ import ChatModel from "../../model/chatSchema.js";
 import MessageModel from "../../model/messageSchema.js";
 import UserModel from "../../model/userSchema.js";
 import geminiResponse from "../../services/geminiResponse.js";
+import incrTokensConsumed from "../../services/incrTokensConsumed.js";
 
 export const getRecentChats = async (req, res) => {
   try {
@@ -53,20 +54,6 @@ export const createChat = async (req, res) => {
       return res.status(404).json({ message: "User not found with this ID " });
     }
 
-    if (Date.now() > findUser.usage.resetAt) {
-      findUser.usage.tokenFiveHourUsed = 0;
-      findUser.usage.resetAt = new Date(Date.now() + 5 * 60 * 60 * 1000);
-      await findUser.save();
-    }
-    if (findUser.usage.tokenFiveHourUsed >= findUser.usage.tokenFiveHourLimit) {
-      // const comebackTiming = new Date(
-      //   findUser.usage.resetAt.getTime() + 5 * 60 * 60 * 1000,
-      // );
-      return res.status(422).json({
-        message: `You have used your Five hour window token limit . Please come back at ${findUser.usage.resetAt.toLocaleString("en-IN")}`,
-      });
-    }
-
     const { prompt } = req.body;
     if (prompt.trim().length === 0) {
       return res.status(422).json({ message: "Please enter the prompt" });
@@ -102,15 +89,19 @@ export const createChat = async (req, res) => {
         resTokens: responseGemini.responseToken,
       },
     });
-    findUser.usage.tokenFiveHourUsed =
-      findUser.usage.tokenFiveHourUsed +
-      responseGemini.totalPromptResponseTokenCount;
+
+    const redisFiveHourTokenKey = `userId${req.payload.id}5hour`;
+    await incrTokensConsumed(
+      redisFiveHourTokenKey,
+      responseGemini.totalPromptResponseTokenCount,
+    );
+
     findUser.usage.totalTokensUsedOverAll =
       findUser.usage.totalTokensUsedOverAll +
       responseGemini.totalPromptResponseTokenCount;
-    console.log("Here in Chat creater :", findUser);
+    console.log("Before saving User Document:", findUser);
     await findUser.save();
-    console.log("after saving it :", findUser);
+    console.log("after saving User Document:", findUser);
     res.status(200).json({
       message: `Chat initiated with id ${createdChat._id} please use this chat id for further usage in this chat `,
     });
