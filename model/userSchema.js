@@ -26,18 +26,18 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     usage: {
-      tokenFiveHourUsed: {
-        type: Number,
-        default: 0,
-      },
-      tokenFiveHourLimit: {
-        type: Number,
-        default: 10000,
-      },
-      resetAt: {
-        type: Date,
-        default: () => new Date(Date.now() + 5 * 60 * 60 * 1000),
-      },
+      // tokenFiveHourUsed: {
+      //   type: Number,
+      //   default: 0,
+      // },
+      // tokenFiveHourLimit: {
+      //   type: Number,
+      //   default: 10000,
+      // },
+      // resetAt: {
+      //   type: Date,
+      //   default: () => new Date(Date.now() + 5 * 60 * 60 * 1000),
+      // },
       totalTokensUsedOverAll: {
         type: Number,
         default: 0,

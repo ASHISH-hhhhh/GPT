@@ -91,15 +91,15 @@ export const createChat = async (req, res) => {
     });
 
     const redisFiveHourTokenKey = `userId${req.payload.id}5hour`;
-    await incrTokensConsumed(
+    const tokensConsumed = await incrTokensConsumed(
       redisFiveHourTokenKey,
       responseGemini.totalPromptResponseTokenCount,
     );
+    console.log("Total tokens consumed In Chat:", tokensConsumed);
 
     findUser.usage.totalTokensUsedOverAll =
       findUser.usage.totalTokensUsedOverAll +
       responseGemini.totalPromptResponseTokenCount;
-    console.log("Before saving User Document:", findUser);
     await findUser.save();
     console.log("after saving User Document:", findUser);
     res.status(200).json({

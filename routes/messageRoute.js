@@ -8,11 +8,17 @@ import {
   rateLimitMIC,
   rateLimitGetMessages,
 } from "../middlwares/rateLimitMessage.js";
+import { rateLimitCreateChatTokens } from "../middlwares/rateLimitLLMTokens.js";
 
 const messageRouter = express.Router();
 messageRouter.use(authenticateUser);
 
 messageRouter.get("/:chatId", rateLimitGetMessages, getChats);
-messageRouter.post("/:chatId", rateLimitMIC, messageInContext);
+messageRouter.post(
+  "/:chatId",
+  rateLimitMIC,
+  rateLimitCreateChatTokens,
+  messageInContext,
+);
 
 export default messageRouter;

@@ -4,6 +4,7 @@ export const rateLimitCreateChatTokens = async (req, res, next) => {
   try {
     const redisFiveHourTokenKey = `userId${req.payload.id}5hour`;
     const exists = await redisClient.exists(redisFiveHourTokenKey);
+
     if (!exists) {
       await redisClient.set(redisFiveHourTokenKey, 0);
       await redisClient.expire(
@@ -11,9 +12,11 @@ export const rateLimitCreateChatTokens = async (req, res, next) => {
         Number(process.env.FIVE_HOUR_LIMIT_TIME_WINDOW),
       );
     }
+
     const getTokensUsedUnderFiveHourLimit = Number(
       await redisClient.get(redisFiveHourTokenKey),
     );
+
     if (
       getTokensUsedUnderFiveHourLimit >=
       Number(process.env.TOKEN_FIVE_HOUR_LIMIT)

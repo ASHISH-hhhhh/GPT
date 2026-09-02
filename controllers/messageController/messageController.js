@@ -176,10 +176,11 @@ export const messageInContext = async (req, res) => {
       },
     );
     const redisFiveHourTokenKey = `userId${req.payload.id}5hour`;
-    await incrTokensConsumed(
+    const tokensUsed = await incrTokensConsumed(
       redisFiveHourTokenKey,
       llmResponse.totalPromptResponseTokenCount,
     );
+    console.log("Total tokens consumed in Messsage:", tokensUsed);
     const updatedUserProfile = await UserModel.findOneAndUpdate(
       { _id: id },
       {
